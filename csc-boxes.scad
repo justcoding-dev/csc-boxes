@@ -47,12 +47,12 @@ module run() {
     // Create a single container with width, depth, height and wall thickness parameters
     // The box is placed at 0/0 and extends in positive directions.
     // box(width, depth, height, wall_thickness);
-    // box(2,2,60,2);
+    // box(2,2,60);
 
     // Create a box and move it by dx base units to the right (use negative values
     // to move to the left) and by dy base unit sizes along the y-axis.
     // box_at(width, depth, height, wall_thickness, dx, dy);
-    // box_at(2,2,40,2,3,2);
+    // box_at(2,2,40,3,2);
 
     // Create a connector bar in x or y direction with a given length (in base units).
     // The bar will begin at 0/0 and extend in positive direction and is then
@@ -61,9 +61,9 @@ module run() {
     // connector_bar_x_at(2, 1, 2);
 
     // Create two boxes and a connector bar and place them spaced for direct printing
-    // box_at(2,1,30,2,0,0);
+    // box_at(2,1,30,0,0);
     // connector_bar_x_at(2, 0, 2);
-    // box_at(2,2,30,2,0,3);
+    // box_at(2,2,30,0,3);
 }
 
 
@@ -84,6 +84,13 @@ connector_height = 1.6;
 
 // Space between connector and top floor
 floor_distance = 0.4;
+
+// The thickness of the box walls
+wall_thickness = 2.3;
+
+// Add a 45-degree slope to the bottom of each inside wall. 
+// Possible values: 0 <= wall_edge_taper <= half of box width 
+wall_edge_taper = 1.5;
 
 // The connectors are triangular shapes that connect the cutouts of two adjacent
 // boxes. They can be attached to a connector bar (or divider). The connector 
@@ -157,18 +164,16 @@ function bar_offset(num) = num != 0 ? sign(num) * max(bar_width / 2 - bar_overla
 run();
 
 
-module box_at(width = 1, depth = 1, height = 1, wall_thickness = 1, x = 0, y = 0) {
+module box_at(width = 1, depth = 1, height = 1, x = 0, y = 0) {
 
     translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
-        box(width, depth, height, wall_thickness);
+        box(width, depth, height);
     
 }
 
 // The complete box with all parts, centered and starting at height 0
-module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
-    
-    // offset = max(bar_width / 2 - bar_overlap, 0);
-    
+module box(width = 1, depth = 1, height = 20) {
+      
     translate([length(width) / 2 + bar_adjust, length(depth) / 2 + bar_adjust, 0])
     intersection() {
         union() {
@@ -246,32 +251,36 @@ module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
                     cube (1, true);
 
             // put a triangular edge at the bottom of each wall
-            
             // left:
             translate([- length(width) / 2, 0, total_floor_height])
-                scale([2 * wall_thickness, length(depth), 2 * wall_thickness])
-                    angled_edge();
-                
-            // right:
-            translate([length(width) / 2, 0, total_floor_height])
-                scale([2 * wall_thickness, length(depth), 2 * wall_thickness])
-                    rotate([0,0,180])
-                    angled_edge();
+            if (wall_edge_taper > 0) {
 
-            // top:
-            translate([0, - length(depth) / 2, total_floor_height])
-                scale([length(width), 2 * wall_thickness, 2 * wall_thickness])
-                    rotate([0,0,90])
-                        angled_edge();
+                edge_taper = wall_edge_taper + wall_thickness;
                 
-            // bottom:
-            translate([0, length(depth) / 2, total_floor_height])
-                scale([length(width), 2 * wall_thickness, 2 * wall_thickness])
-                    rotate([0,0,270])
+                // left:
+                translate([- length(width) / 2, 0, total_floor_height])
+                    scale([edge_taper, length(depth), edge_taper])
                         angled_edge();
-                        
-                        
-                angled_edge();
+                    
+                // right:
+                translate([length(width) / 2, 0, total_floor_height])
+                    scale([edge_taper, length(depth), edge_taper])
+                        rotate([0,0,180])
+                        angled_edge();
+
+                // top:
+                translate([0, - length(depth) / 2, total_floor_height])
+                    scale([length(width), edge_taper, edge_taper])
+                        rotate([0,0,90])
+                            angled_edge();
+                    
+                // bottom:
+                translate([0, length(depth) / 2, total_floor_height])
+                    scale([length(width), edge_taper, edge_taper])
+                        rotate([0,0,270])
+                            angled_edge();
+                            
+            }
         }
         
         // Cut off the corners of the box
@@ -376,14 +385,14 @@ module create_fitting_test() {
     
     // Setup one box in the origin location, mask out one half
     intersection() {
-        box(1, 1, total_floor_height, 3);
+        box(1, 1, total_floor_height);
         box_mask_connector();
     }
     
     // Setup a second box further down the x axis, mask out half of it
     translate ([shift(1.5) + bar_offset(1.5), shift(0) + bar_offset(0), 0]) 
         intersection() {
-            box(1, 1, total_floor_height, 3);
+            box(1, 1, total_floor_height);
             box_mask_connector();
         }
 
@@ -401,9 +410,9 @@ module box_mask_connector() {
 }
 
 // Create one box with one connector bar
-module create_box_with_bar(width = 1, depth = 1, height = 10, wall_thickness = 2) {
+module create_box_with_bar(width = 1, depth = 1, height = 10) {
     
-    box(1, 1, height, wall_thickness);
+    box(1, 1, height);
 
     // Where to place the connector: 
     // make box and connector: fit connectors into cutouts on +y side:
@@ -422,36 +431,36 @@ module create_demo_box_set_9x9() {
     
     // top right
     connector_bar_y_at(2, 0, 0);
-    box(2,2,30,1);
+    box(2,2,30);
     connector_bar_y_at(3, 2, 0);
-    box_at(3,1,30,1,-1,2);
-    box_at(1,3,30,1,2,0);
+    box_at(3,1,30,-1,2);
+    box_at(1,3,30,2,0);
     connector_bar_x_at(2,0,2);
 
     // top left
     connector_bar_x_at(4, -1, 0);
-    box_at(1,1,30,1,-1,0);
-    box_at(1,1,30,1,-1,1);
+    box_at(1,1,30,-1,0);
+    box_at(1,1,30,-1,1);
     connector_bar_x_at(1, -1, 1);
     connector_bar_y_at(5, -1, -3);
-    box_at(2,3,30,1, -3, -1);
+    box_at(2,3,30, -3, -1);
     connector_bar_x_at(3, -3, 2);
-    box_at(2,1,30,1, -3, 2);
+    box_at(2,1,30, -3, 2);
     connector_bar_y_at(1, -1, 2);
 
     
     // bottom left
     connector_bar_y_at(1, 0, -1);
-    box_at(1,1,30,1,-1,-1);
-    box_at(2,2,30,1, -1, -3);
-    box_at(2,2,30,1, -3, -3);
+    box_at(1,1,30,-1,-1);
+    box_at(2,2,30, -1, -3);
+    box_at(2,2,30, -3, -3);
     connector_bar_x_at(2, -3, -1);
 
     // bottom right
-    box_at(2,1,30,1,1,-3);
-    box_at(2,1,30,1,0,-1);
-    box_at(1,1,30,1,1,-2);
-    box_at(1,2,30,1,2,-2);
+    box_at(2,1,30,1,-3);
+    box_at(2,1,30,0,-1);
+    box_at(1,1,30,1,-2);
+    box_at(1,2,30,2,-2);
     connector_bar_x_at(3, -1, -1);
     connector_bar_x_at(2, 1, -2);
     connector_bar_y_at(2, 2, -2);

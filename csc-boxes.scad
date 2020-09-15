@@ -245,6 +245,33 @@ module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
                 scale ([wall_thickness, length(depth), height - total_floor_height]) 
                     cube (1, true);
 
+            // put a triangular edge at the bottom of each wall
+            
+            // left:
+            translate([- length(width) / 2, 0, total_floor_height])
+                scale([2 * wall_thickness, length(depth), 2 * wall_thickness])
+                    angled_edge();
+                
+            // right:
+            translate([length(width) / 2, 0, total_floor_height])
+                scale([2 * wall_thickness, length(depth), 2 * wall_thickness])
+                    rotate([0,0,180])
+                    angled_edge();
+
+            // top:
+            translate([0, - length(depth) / 2, total_floor_height])
+                scale([length(width), 2 * wall_thickness, 2 * wall_thickness])
+                    rotate([0,0,90])
+                        angled_edge();
+                
+            // bottom:
+            translate([0, length(depth) / 2, total_floor_height])
+                scale([length(width), 2 * wall_thickness, 2 * wall_thickness])
+                    rotate([0,0,270])
+                        angled_edge();
+                        
+                        
+                angled_edge();
         }
         
         // Cut off the corners of the box
@@ -254,10 +281,6 @@ module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
         
     }   
 }
-
-// Mask out everything except the area around one connector. 
-// Box size must be 1,1
-
 
 // Create a connector bar in x-direction and move it to the given x and y position
 module connector_bar_x_at(length = 1, x = 0, y = 0) {
@@ -496,4 +519,12 @@ module roundedcube(size = [1, 1, 1], center = false, radius = 0.5, apply_to = "a
 			}
 		}
 	}
+}
+
+// Create a triangle lying on it's 90 degree angle, hypothenusis on the right
+module angled_edge() {
+    translate ([0,0.5,0]) 
+        rotate([90,0,0]) 
+            linear_extrude(height=1)
+                polygon(points=[[0,0],[1,0],[0,1]]);
 }

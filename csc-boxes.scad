@@ -3,6 +3,7 @@
 //
 // v4 - reduced base block size to 40mm, some modularization
 // v5 - added divider_width into box size calculations, debug simplify switch
+// v6 - organization and renaming
 ////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -26,24 +27,24 @@ make_connector = true;
 
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit will have a cutout 
-// for a connector.
+// for a connector on the outside.
 
 // Size of one unit, which has one connector
-unit = 20;
+unit_size = 20;
 
 // Number of units in X-direction.
 // This value is also used when making a connector bar.
-box_width = 1;
+box_width = 2;
 
 // Number of units in Y-direction
 // This value is not used for the connector bar
-box_depth = 2;
+box_depth = 1;
 
 // Total height of the box in mm
-box_height = 5;
+box_height = 3;
 
 // Thickness of the walls in mm
-wall_thickness = 3;
+wall_thickness = 1;
 
 
 // The floor is made up of three parts. The upper_floor is the visible floor 
@@ -53,10 +54,10 @@ wall_thickness = 3;
 
 // Thickness of the upper floor part. This can be rather thin, as it only
 // covers the cutouts. 
-upper_floor_thickness = 0.8;
+top_floor_height = 0.8;
 
 // Thickness of the connector bar and connectors
-connector_thickness = 1;
+connector_height = 1;
 
 // Space between connector and upper floor
 floor_distance = 0.2;
@@ -68,7 +69,7 @@ floor_distance = 0.2;
 
 // Width of the divider bar with the connectors. Set to zero to create only individual
 // connector pieces.
-div_width = 5;
+bar_width = 4;
 
 // How much the connectors should overlap
 // When zero, the connectors will touch their edges in the middle of the
@@ -79,10 +80,10 @@ connector_overlap = 5;
 // You might want to adjust this value (the connector size) when changing the connector 
 // overlap above. The cutouts for the connectors must not touch each other.
 // For an overlap of 15 a divisor of 3.5 here works well.
-connector_radius = unit / 3.5;
+connector_radius = unit_size / 3.5;
 
 // How much the divider goes under the boxes (probably needs supports on the boxes)
-div_overlap = 0;
+bar_overlap = 2;
 
 // Size difference between radii of the connector and the cutouts in mm
 connector_margin = 0.5;
@@ -99,19 +100,22 @@ sizeX = (make_box || make_connector) ? box_width : 1;
 sizeY = (make_box || make_connector) ? box_depth : 1;
 
 // Calculate total floor thickness from the individual layers
-total_floor_thickness = upper_floor_thickness + connector_thickness + floor_distance;
+total_floor_thickness = top_floor_height + connector_height + floor_distance;
 
 // The height of the bottom part of the floor, this will encase the connectors 
-bottom_floor_thickness = connector_thickness + floor_distance;
+bottom_floor_thickness = connector_height + floor_distance;
 
-lengthX = sizeX * unit + (sizeX - 1) * div_width;
-lengthY = sizeY * unit + (sizeY - 1) * div_width;
+div_adjust = bar_width - 2 * bar_overlap;
+
+lengthX = sizeX * unit_size + (sizeX - 1) * div_adjust;
+lengthY = sizeY * unit_size + (sizeY - 1) * div_adjust;
 
 outer_radius = connector_radius + connector_margin / 2;
 inner_radius = connector_radius - connector_margin / 2;
 
 height = (make_box || make_connector) ? box_height : total_floor_thickness;
 
+// Make the box
 intersection() {    
     box();
     
@@ -127,44 +131,51 @@ intersection() {
     
 }
 
+// Make the connector bar
 if (make_connector || ! make_box) {
     
     // Where to place the connector: 
     // make box and connector: fit connectors into cutouts on +y side
     // only connector bar: keep in center
     // fitting test: place connector next to box cutout
-    y_offset = make_box ? (lengthY + div_width) / 2 : ( make_connector ? 0 : unit); 
+    y_offset = make_box ? (lengthY + bar_width) / 2 - bar_overlap : ( make_connector ? 0 : unit_size); 
 
-    translate ([0, y_offset, connector_thickness / 2]) 
-        union() {
+    translate ([0, y_offset, connector_height / 2]) 
+        connector_bar();
+        
+
+}
+
+
+module connector_bar() {
+    union() {
             
-            // The middle part of the connector. Only create, if it should be wider than 0
-            if (div_width > 0) {
-                
-                // Pre-calc length of the divider
-                cyl_len = lengthX - div_overlap * 2;
-                
-                // Build the actual divider itself
-                scale ([cyl_len, div_width - connector_margin, connector_thickness])  cube (1, true);
-                
-                // Add a triangular guide on top so the boxes can slide in place
-                // translate([0,0, div_width * 0.3660254 ]) 
-                //    rotate ([60, 0, 0]) 
-                //        rotate ([0, 90, 0]) 
-                //            cylinder(c_height, div_width / 2, div_width / 2, true, $fn=3);
-            }
+        // The middle part of the connector. Only create, if it should be wider than 0
+        if (bar_width > 0) {
             
-            // Attach connectors to both sides of the middle part
-            for (i = [1:sizeX] ) {
-                
-               translate([conn_pos(i, sizeX), -inner_radius + connector_overlap / 2, 0]) 
-                    connectorX(connector_thickness, inner_radius);
-                
-               translate([conn_pos(i, sizeX), inner_radius - connector_overlap / 2, 0]) 
-                    connectorX(connector_thickness, inner_radius, true);
-            }
+            // Pre-calc length of the divider
+            cyl_len = lengthX - bar_overlap * 2;
+            
+            // Build the actual divider itself
+            scale ([cyl_len, bar_width - connector_margin, connector_height])  cube (1, true);
+            
+            // Add a triangular guide on top so the boxes can slide in place
+            // translate([0,0, bar_width * 0.3660254 ]) 
+            //    rotate ([60, 0, 0]) 
+            //        rotate ([0, 90, 0]) 
+            //            cylinder(c_height, bar_width / 2, bar_width / 2, true, $fn=3);
         }
-
+        
+        // Attach connectors to both sides of the middle part
+        for (i = [1:sizeX] ) {
+            
+           translate([conn_pos(i, sizeX), -inner_radius + connector_overlap / 2, 0]) 
+                connectorX(connector_height, inner_radius);
+            
+           translate([conn_pos(i, sizeX), inner_radius - connector_overlap / 2, 0]) 
+                connectorX(connector_height, inner_radius, true);
+        }
+    }
 }
 
 // Some boxes to mask out the needed parts of the box
@@ -194,15 +205,15 @@ module box() {
             difference() {
                 
                 // Bottom floor which will house the connectors
-                bottom_floor_height = bottom_floor_thickness + upper_floor_thickness / 2;
+                bottom_floor_height = bottom_floor_thickness + top_floor_height / 2;
                 translate ([0, 0, bottom_floor_height / 2])
-                    scale ([lengthX - div_overlap * 2, lengthY - div_overlap * 2, bottom_floor_height]) 
+                    scale ([lengthX - bar_overlap * 2, lengthY - bar_overlap * 2, bottom_floor_height]) 
                         cube(1, true);
                 
                 // Connector cutouts
                 union() {
                    
-                    conn_offset = (div_width + connector_overlap) / 2 - div_overlap + outer_radius - inner_radius;
+                    conn_offset = (bar_width + connector_overlap) / 2 - bar_overlap + outer_radius - inner_radius;
                     
                     c_height = 10 * total_floor_thickness;
                     
@@ -229,8 +240,8 @@ module box() {
 
 
             // Upper floor
-            translate ([0, 0, upper_floor_thickness / 2 + bottom_floor_thickness + floor_distance]) 
-                scale ([lengthX, lengthY, upper_floor_thickness]) 
+            translate ([0, 0, top_floor_height / 2 + bottom_floor_thickness + floor_distance]) 
+                scale ([lengthX, lengthY, top_floor_height]) 
                     cube(1, true);
             
             // Walls
@@ -261,7 +272,7 @@ module box() {
     }   
 }
 
-function conn_pos(i, size) = (i - size / 2 - 0.5) * unit + (i - size / 2 - 0.5) * div_width;
+function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * div_adjust;
 
 // A triangular connector
 module connector(height = 1, radius = 1) {

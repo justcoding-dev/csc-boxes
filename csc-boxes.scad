@@ -6,6 +6,7 @@
 // v6 - organization and renaming
 // v6.2 - modularization, placement of objects
 // v6.3 - set useful starting values
+// v6.4 - documentation
 //
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
@@ -16,7 +17,12 @@
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Start editing here
-// The following are variables that should stay the same for all boxes in a set.
+//
+// Place your commands for creating things in the run() module. It will be run
+// after all variables have been initialized.
+//
+// Edit the parameters for the box and connector geometry in the lines below
+// the run() module. 
 ////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -28,20 +34,30 @@ simplify = false;
 // are defined further down in the script).
 module run() {
 
+    // Create a set of containers and connector bars over a 9x9 area to
+    // judge how they fit together
+    // create_demo_box_set_9x9();
+
     // Create a small smaple of connector and cutout to see how well they fit together
     // Useful for testing out new sizes and tolerances
     // create_fitting_test();
 
-    // Create a set of containers and connector bars over a 9x9 area to
-    // judge how they fit together
-    create_demo_box_set_9x9();
-
     // Create a single container with width, depth, height and wall thickness parameters
+    // The box is placed at 0/0 and extends in positive directions.
+    // box(width, depth, height, wall_thickness);
     // box(2,2,60,2);
 
-    // Create a connector bar with a given length (in base units)
-    // connector_bar(3);
-    
+    // Create a box and move it by dx base units to the right (use negative values
+    // to move to the left) and by dy base unit sizes along the y-axis.
+    // box_at(width, depth, height, wall_thickness, dx, dy);
+    // box_at(2,2,40,2,3,2);
+
+    // Create a connector bar in x or y direction with a given length (in base units).
+    // The bar will begin at 0/0 and extend in positive direction and is then
+    // moved by dx and dy base unit sizes along the x and y axis.
+    // connector_bar_x_at(length, dx, dy);
+    // connector_bar_x_at(2, 1, 2);
+
     // Create two boxes and a connector bar and place them spaced for direct printing
     // box_at(2,1,30,2,0,0);
     // connector_bar_x_at(2, 0, 2);
@@ -97,7 +113,7 @@ connector_radius = unit_size / 3.5;
 connector_margin = 0.3;
 
 ////////////////////////////////////////////////////////////////////////////////////
-// Stop editing here. Continue below 
+// Stop editing here. 
 ////////////////////////////////////////////////////////////////////////////////////
 
 // Calculate some helper variables
@@ -120,8 +136,12 @@ function length(numUnits) = numUnits * unit_size + sign(numUnits) * (abs(numUnit
 outer_radius = connector_radius + connector_margin / 2;
 inner_radius = connector_radius - connector_margin / 2;
 
+// Everything ist set. Run the module with the user commands.
 run();
 
+// Create two half 1x1 boxes without walls and a connector for quickly
+// printing a test sample to judge the fitting of the connectors to
+// the boxes.
 module create_fitting_test() {
     
     // Setup one box in the origin location, mask out one half

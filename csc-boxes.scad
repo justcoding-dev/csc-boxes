@@ -8,7 +8,7 @@
 // v6.3 - set useful starting values
 // v6.4 - documentation
 // v6.5 - code cleanup, moved modules
-//
+// v6.6 - grooved bottom for stackability
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit in the box will 
@@ -153,7 +153,6 @@ function shift(num) = num != 0 ? length(num) : 0;
 // Calculate how far a connector bar must be shifted to match the box cutouts
 function bar_offset(num) = num != 0 ? sign(num) * max(bar_width / 2 - bar_overlap, 0) * 2 : 0;
 
-
 // Everything ist set. Run the module with the user commands.
 run();
 
@@ -180,8 +179,21 @@ module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
                 bottom_floor_height = bottom_floor_height + top_floor_height / 2;
                 
                 translate ([0, 0, bottom_floor_height / 2])
-                    scale ([length(width) - bar_overlap * 2, length(depth) - bar_overlap * 2, bottom_floor_height]) 
-                        cube(1, true);
+                union() {
+                    // Create individual bottom parts for each unit
+                    
+                    x_offset =  - length(width) / 2 - length(1) / 2;
+                    y_offset =  - length(depth) / 2 - length(1) / 2;
+                    
+                    for (i = [1:width]) {
+                        for (j = [1:depth]) {
+                            // Create one bottom piece and move it to it's unit position
+                            translate ([x_offset + length(i), y_offset + length(j), 0])                     
+                                scale ([unit_size - bar_overlap * 2, unit_size - bar_overlap * 2, bottom_floor_height]) 
+                                    cube(1, true);
+                        }
+                    }
+                } 
                 
                 // Connector cutouts
                 union() {

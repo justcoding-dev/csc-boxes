@@ -16,14 +16,13 @@ become stackable. See the comments in the script parameters for more details.
 
 ## Getting started
 
-Download the script, open in OpenSCAD, set the simplify parameter at the beginning to 'true',
-un-comment the line *create_demo_box_set*
+Download the script, open in OpenSCAD, 
 and run the script. This will create a set of boxes based on a 40mm base size with connector bars.
 
 Feel free to experiment with the parameters in the top sections (marked by *Start Editing* and 
 *Stop Editing* comments). 
 
-Next, comment out the *create_demo_box_set* command and un-comment the *create_fitting_test();* 
+Next, comment out the *create_demo_box_set* command and un-comment the *create_fitting_test* 
 line. Set the *simplify* parameter back to **false**. This will generate one connector bar and 
 two half boxes without walls. These can be used to print and check how well the connectors
 fit the cutouts in the boxes.
@@ -33,6 +32,7 @@ Experiment with the parameters for the box and connector geometry, if you want.
 When you are satisfied with the geometry and want to start creating boxes, create one or
 more boxes and/or connectors, export to STL and print.
 
+Feel free to examine the samples in the *run()* module to see how it all works.
 
 ## The *simplify* parameter
 

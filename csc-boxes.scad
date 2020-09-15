@@ -7,6 +7,7 @@
 // v6.2 - modularization, placement of objects
 // v6.3 - set useful starting values
 // v6.4 - documentation
+// v6.5 - code cleanup, moved modules
 //
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
@@ -27,7 +28,7 @@
 
 
 // Set to true for debugging (disables corner rounding for faster ren):
-simplify = false;
+simplify = true;
 
 // This will be run once all variables have been initialized. Put your 
 // wanted things here or uncomment one of the predefined functions (they
@@ -35,8 +36,9 @@ simplify = false;
 module run() {
 
     // Create a set of containers and connector bars over a 9x9 area to
-    // judge how they fit together
-    // create_demo_box_set_9x9();
+    // judge how they fit together.
+    // Use 'simplify = true' to increase responsiveness of the viewer.
+    create_demo_box_set_9x9();
 
     // Create a small smaple of connector and cutout to see how well they fit together
     // Useful for testing out new sizes and tolerances
@@ -84,19 +86,21 @@ connector_height = 1.6;
 floor_distance = 0.4;
 
 // The connectors are triangular shapes that connect the cutouts of two adjacent
-// boxes. They can be attached to a connector bar (or divider), but that will add 
-// a gap between the boxes. Also it will complicated calculations for the
-// box dimensions and connector positions...
+// boxes. They can be attached to a connector bar (or divider). The connector 
+// bar can sit between the boxes or partially or completely underneath the boxes.
 
 // Width of the divider bar with the connectors. Set to zero to create only individual
 // connector pieces.
 // Possible value: bar_width >= 0
-bar_width = 6;
+bar_width = 5;
 
 // How much the divider goes under the boxes. If this is greater than 0, the box
 // must be printed with supports.
+// Set bar_overlap = bar_width / 2 to avoid ending up with spaces between the boxes.
+// Set your box wall_thickness to slightly less than the bar_overlap to make the
+// boxes stackable.
 // Possible values: 0 <= bar_overlap <= bar_width
-bar_overlap = 3;
+bar_overlap = 2.5;
 
 // How much the connectors should overlap
 // When zero, the connectors will touch their edges in the middle of the
@@ -133,173 +137,33 @@ bar_adjust = max(bar_width / 2 - bar_overlap, 0);
 // Calculate total box length for a given number of base units
 function length(numUnits) = numUnits * unit_size + sign(numUnits) * (abs(numUnits) - 1) * div_adjust;
 
+// Radius of the cutout in the box floor
 outer_radius = connector_radius + connector_margin / 2;
+
+// Radius of the connector
 inner_radius = connector_radius - connector_margin / 2;
-
-// Everything ist set. Run the module with the user commands.
-run();
-
-// Create two half 1x1 boxes without walls and a connector for quickly
-// printing a test sample to judge the fitting of the connectors to
-// the boxes.
-module create_fitting_test() {
-    
-    // Setup one box in the origin location, mask out one half
-    intersection() {
-        box(1, 1, total_floor_height, 3);
-        box_mask_connector();
-    }
-    
-    // Setup a second box further down the x axis, mask out half of it
-    translate ([shift(1.5) + bar_offset(1.5), shift(0) + bar_offset(0), 0]) 
-        intersection() {
-            box(1, 1, total_floor_height, 3);
-            box_mask_connector();
-        }
-
-    // Put a connector between the boxes
-    connector_bar_y_at(1, 1.5, 0);
-}
-
-
-// Mask out everything except the area around one connector. 
-// Box size must be 1,1
-module box_mask_connector() {
-    
-    translate([length(1) / 2, length(1) / 4, 0])
-        translate([length(1) / 4 + bar_adjust, length(1) / 4 + bar_adjust, total_floor_height / 2])
-            // scale([outer_radius * 2, outer_radius * 2, total_floor_height]) 
-            scale([length(1) / 2, length(1), total_floor_height]) 
-                cube(1, true);
-}
-
-
-module create_box_with_bar(width = 1, depth = 1, height = 10, wall_thickness = 2) {
-    
-    box(1, 1, height, wall_thickness);
-
-    // Where to place the connector: 
-    // make box and connector: fit connectors into cutouts on +y side:
-    // (lengthY + bar_width) / 2 - bar_overlap
-    y_offset = (lengthY + bar_width) / 2 - bar_overlap; 
-
-    translate ([0, y_offset, 0]) 
-        connector_bar();
-        
-
-}
-
-module create_demo_box_set_9x9() {
-    
-    // top right
-    connector_bar_y_at(2, 0, 0);
-    box(2,2,30,1);
-    connector_bar_y_at(3, 2, 0);
-    box_at(3,1,30,1,-1,2);
-    box_at(1,3,30,1,2,0);
-    connector_bar_x_at(2,0,2);
-
-    // top left
-    connector_bar_x_at(4, -1, 0);
-    box_at(1,1,30,1,-1,0);
-    box_at(1,1,30,1,-1,1);
-    connector_bar_x_at(1, -1, 1);
-    connector_bar_y_at(5, -1, -3);
-    box_at(2,3,30,1, -3, -1);
-    connector_bar_x_at(3, -3, 2);
-    box_at(2,1,30,1, -3, 2);
-    connector_bar_y_at(1, -1, 2);
-
-    
-    // bottom left
-    connector_bar_y_at(1, 0, -1);
-    box_at(1,1,30,1,-1,-1);
-    box_at(2,2,30,1, -1, -3);
-    box_at(2,2,30,1, -3, -3);
-    connector_bar_x_at(2, -3, -1);
-
-    // bottom right
-    box_at(2,1,30,1,1,-3);
-    box_at(2,1,30,1,0,-1);
-    box_at(1,1,30,1,1,-2);
-    box_at(1,2,30,1,2,-2);
-    connector_bar_x_at(3, -1, -1);
-    connector_bar_x_at(2, 1, -2);
-    connector_bar_y_at(2, 2, -2);
-    connector_bar_y_at(2, 1, -3);
-
-
-}
 
 
 // Position of the i-th connector 
 function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * div_adjust;
 
-function shift(num_units) = num_units != 0 ? length(num_units) : 0;
+// Calculate how far a connector bar must be moved when placing in wanted position
+function shift(num) = num != 0 ? length(num) : 0;
+
+// Calculate how far a connector bar must be shifted to match the box cutouts
 function bar_offset(num) = num != 0 ? sign(num) * max(bar_width / 2 - bar_overlap, 0) * 2 : 0;
 
 
-module connector_bar_x_at(length = 1, x = 0, y = 0) {
-    
-
-    translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
-        connector_bar(length);
-}
-
-module connector_bar_y_at(length = 1, x = 0, y = 0) {
-
-
-    translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
-        rotate ([0, 0, 90]) 
-            connector_bar(length );
-}
-
-// Create a connector bar of a given length , oriented along the x-axis
-module connector_bar(l = 1) {
-    translate([length(l) / 2 + (bar_width / 2 - bar_overlap), 0, connector_height / 2])
-        union() {
-                
-            // The middle part of the connector. Only create, if it should be wider than 0
-            if (bar_width > 0) {
-                
-                // Pre-calc length of the divider
-                cyl_len = length(l) - bar_overlap * 2;
-                
-                // Build the actual divider itself
-                scale ([cyl_len, bar_width - connector_margin, connector_height])  cube (1, true);
-                
-                // Add a triangular guide on top so the boxes can slide in place
-                // translate([0,0, bar_width * 0.3660254 ]) 
-                //    rotate ([60, 0, 0]) 
-                //        rotate ([0, 90, 0]) 
-                //            cylinder(c_height, bar_width / 2, bar_width / 2, true, $fn=3);
-            }
-            
-            // Attach connectors to both sides of the middle part
-            for (i = [1:l] ) {
-                
-               translate([conn_pos(i, l), -inner_radius + connector_overlap / 2, 0]) 
-                    connectorX(connector_height, inner_radius);
-                
-               translate([conn_pos(i, l), inner_radius - connector_overlap / 2, 0]) 
-                    connectorX(connector_height, inner_radius, true);
-            }
-        }
-}
-
+// Everything ist set. Run the module with the user commands.
+run();
 
 
 module box_at(width = 1, depth = 1, height = 1, wall_thickness = 1, x = 0, y = 0) {
-
-    // x_offset = x != 0 ? length(x) : 0;
-    // y_offset = y != 0 ? length(y) : 0;
 
     translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
         box(width, depth, height, wall_thickness);
     
 }
-
-// function max(a,b) = a > b ? a : b;
 
 // The complete box with all parts, centered and starting at height 0
 module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
@@ -379,6 +243,63 @@ module box(width = 1, depth = 1, height = 20, wall_thickness = 2) {
     }   
 }
 
+// Mask out everything except the area around one connector. 
+// Box size must be 1,1
+
+
+// Create a connector bar in x-direction and move it to the given x and y position
+module connector_bar_x_at(length = 1, x = 0, y = 0) {
+    
+
+    translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
+        connector_bar(length);
+}
+
+// Create a connector bar in y-direction and move it to the given x and y position
+module connector_bar_y_at(length = 1, x = 0, y = 0) {
+
+
+    translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
+        rotate ([0, 0, 90]) 
+            connector_bar(length );
+}
+
+// Create a connector bar of a given length , oriented along the x-axis
+module connector_bar(l = 1) {
+    
+    translate([length(l) / 2 + (bar_width / 2 - bar_overlap), 0, connector_height / 2])
+        union() {
+                
+            // The middle part of the connector. Only create, if it should be wider than 0
+            if (bar_width > 0) {
+                
+                // Pre-calc length of the divider
+                cyl_len = length(l) - bar_overlap * 2;
+                
+                // Build the actual divider itself
+                scale ([cyl_len, bar_width - connector_margin, connector_height])  cube (1, true);
+                
+                // Add a triangular guide on top so the boxes can slide in place
+                // translate([0,0, bar_width * 0.3660254 ]) 
+                //    rotate ([60, 0, 0]) 
+                //        rotate ([0, 90, 0]) 
+                //            cylinder(c_height, bar_width / 2, bar_width / 2, true, $fn=3);
+            }
+            
+            // Attach connectors to both sides of the middle part
+            for (i = [1:l] ) {
+                
+               translate([conn_pos(i, l), -inner_radius + connector_overlap / 2, 0]) 
+                    connectorX(connector_height, inner_radius);
+                
+               translate([conn_pos(i, l), inner_radius - connector_overlap / 2, 0]) 
+                    connectorX(connector_height, inner_radius, true);
+            }
+        }
+}
+
+
+
 // A triangular connector
 module connector(height = 1, radius = 1) {
     
@@ -412,8 +333,99 @@ module connectorY(height = 1, radius = 1, mirrored = false) {
 }
 
 
+
+// Create two half 1x1 boxes without walls and a connector for quickly
+// printing a test sample to judge the fitting of the connectors to
+// the boxes.
+module create_fitting_test() {
+    
+    // Setup one box in the origin location, mask out one half
+    intersection() {
+        box(1, 1, total_floor_height, 3);
+        box_mask_connector();
+    }
+    
+    // Setup a second box further down the x axis, mask out half of it
+    translate ([shift(1.5) + bar_offset(1.5), shift(0) + bar_offset(0), 0]) 
+        intersection() {
+            box(1, 1, total_floor_height, 3);
+            box_mask_connector();
+        }
+
+    // Put a connector between the boxes
+    connector_bar_y_at(1, 1.5, 0);
+}
+
+// A mask to hide half of a 1x1 box for the fitting test
+module box_mask_connector() {
+    
+    translate([length(1) / 2, length(1) / 4, 0])
+        translate([length(1) / 4 + bar_adjust, length(1) / 4 + bar_adjust, total_floor_height / 2])
+            scale([length(1) / 2, length(1), total_floor_height]) 
+                cube(1, true);
+}
+
+// Create one box with one connector bar
+module create_box_with_bar(width = 1, depth = 1, height = 10, wall_thickness = 2) {
+    
+    box(1, 1, height, wall_thickness);
+
+    // Where to place the connector: 
+    // make box and connector: fit connectors into cutouts on +y side:
+    // (lengthY + bar_width) / 2 - bar_overlap
+    y_offset = (lengthY + bar_width) / 2 - bar_overlap; 
+
+    translate ([0, y_offset, 0]) 
+        connector_bar();
+        
+
+}
+
+// Create a set of boxes and connectors across all quadrants to check positioning 
+// and fitting
+module create_demo_box_set_9x9() {
+    
+    // top right
+    connector_bar_y_at(2, 0, 0);
+    box(2,2,30,1);
+    connector_bar_y_at(3, 2, 0);
+    box_at(3,1,30,1,-1,2);
+    box_at(1,3,30,1,2,0);
+    connector_bar_x_at(2,0,2);
+
+    // top left
+    connector_bar_x_at(4, -1, 0);
+    box_at(1,1,30,1,-1,0);
+    box_at(1,1,30,1,-1,1);
+    connector_bar_x_at(1, -1, 1);
+    connector_bar_y_at(5, -1, -3);
+    box_at(2,3,30,1, -3, -1);
+    connector_bar_x_at(3, -3, 2);
+    box_at(2,1,30,1, -3, 2);
+    connector_bar_y_at(1, -1, 2);
+
+    
+    // bottom left
+    connector_bar_y_at(1, 0, -1);
+    box_at(1,1,30,1,-1,-1);
+    box_at(2,2,30,1, -1, -3);
+    box_at(2,2,30,1, -3, -3);
+    connector_bar_x_at(2, -3, -1);
+
+    // bottom right
+    box_at(2,1,30,1,1,-3);
+    box_at(2,1,30,1,0,-1);
+    box_at(1,1,30,1,1,-2);
+    box_at(1,2,30,1,2,-2);
+    connector_bar_x_at(3, -1, -1);
+    connector_bar_x_at(2, 1, -2);
+    connector_bar_y_at(2, 2, -2);
+    connector_bar_y_at(2, 1, -3);
+}
+
 // Higher definition curves for the cube
 $fs = 0.01;
+
 
 module roundedcube(size = [1, 1, 1], center = false, radius = 0.5, apply_to = "all") {
 	// If single value, convert to [x, y, z] vector

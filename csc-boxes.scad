@@ -251,8 +251,6 @@ module box(width = 1, depth = 1, height = 20) {
                     cube (1, true);
 
             // put a triangular edge at the bottom of each wall
-            // left:
-            translate([- length(width) / 2, 0, total_floor_height])
             if (wall_edge_taper > 0) {
 
                 edge_taper = wall_edge_taper + wall_thickness;

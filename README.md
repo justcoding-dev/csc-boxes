@@ -41,3 +41,9 @@ the model with all this rounding slows down generation and responsiveness of the
 
 Therefore the rounding can be switched off by setting the *simplify* parameter to **true**.
 
+## Stacking
+
+The boxes have grooves at the bottom, along the outlines of each square base unit, and with
+the width of the bar_overlap parameter. If the bar overlap is slightly larger then the wall_thickness,
+it will be possible to stack the boxes. Because of the grooves, even larger boxes can be stacked
+on top of multiple smaller ones.

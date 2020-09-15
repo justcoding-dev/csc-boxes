@@ -5,6 +5,7 @@
 // v5 - added divider_width into box size calculations, debug simplify switch
 // v6 - organization and renaming
 // v6.2 - modularization, placement of objects
+// v6.3 - set useful starting values
 //
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
@@ -20,7 +21,7 @@
 
 
 // Set to true for debugging (disables corner rounding for faster ren):
-simplify = true;
+simplify = false;
 
 // This will be run once all variables have been initialized. Put your 
 // wanted things here or uncomment one of the predefined functions (they
@@ -33,7 +34,7 @@ module run() {
 
     // Create a set of containers and connector bars over a 9x9 area to
     // judge how they fit together
-    // create_demo_box_set_9x9();
+    create_demo_box_set_9x9();
 
     // Create a single container with width, depth, height and wall thickness parameters
     // box(2,2,60,2);
@@ -42,9 +43,9 @@ module run() {
     // connector_bar(3);
     
     // Create two boxes and a connector bar and place them spaced for direct printing
-    box_at(2,1,30,2,0,0);
-    connector_bar_x_at(2, 0, 2);
-    box_at(2,2,30,2,0,3);
+    // box_at(2,1,30,2,0,0);
+    // connector_bar_x_at(2, 0, 2);
+    // box_at(2,2,30,2,0,3);
 }
 
 

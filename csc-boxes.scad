@@ -46,12 +46,12 @@ module run() {
 
     // Create a single container with width, depth, height and wall thickness parameters
     // The box is placed at 0/0 and extends in positive directions.
-    // box(width, depth, height, wall_thickness);
+    // box(width, depth, height);
     // box(2,2,60);
 
     // Create a box and move it by dx base units to the right (use negative values
     // to move to the left) and by dy base unit sizes along the y-axis.
-    // box_at(width, depth, height, wall_thickness, dx, dy);
+    // box_at(width, depth, height, dx, dy);
     // box_at(2,2,40,3,2);
 
     // Create a connector bar in x or y direction with a given length (in base units).
@@ -137,8 +137,9 @@ bottom_floor_height = connector_height + floor_distance;
 
 // Size adjustment to account for bar width and overlap (two 1x1 boxes with a connector
 // bar between them must take the same space as one 1x2 box)
-div_adjust = bar_width - 2 * bar_overlap;
+div_adjust = max(bar_width - 2 * bar_overlap, 0);
 
+// Adjust position for wide bars (wider than the overlap on both sides)
 bar_adjust = max(bar_width / 2 - bar_overlap, 0);
 
 // Calculate total box length for a given number of base units
@@ -149,7 +150,6 @@ outer_radius = connector_radius + connector_margin / 2;
 
 // Radius of the connector
 inner_radius = connector_radius - connector_margin / 2;
-
 
 // Position of the i-th connector 
 function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * div_adjust;
@@ -173,7 +173,7 @@ module box_at(width = 1, depth = 1, height = 1, x = 0, y = 0) {
 
 // The complete box with all parts, centered and starting at height 0
 module box(width = 1, depth = 1, height = 20) {
-      
+    
     translate([length(width) / 2 + bar_adjust, length(depth) / 2 + bar_adjust, 0])
     intersection() {
         union() {
@@ -203,7 +203,7 @@ module box(width = 1, depth = 1, height = 20) {
                 // Connector cutouts
                 union() {
                    
-                    conn_offset = (bar_width + connector_overlap) / 2 - bar_overlap + outer_radius - inner_radius;
+                    conn_offset = bar_adjust + connector_overlap / 2 + outer_radius - inner_radius;
                     
                     c_height = 10 * total_floor_height;
                     
@@ -309,7 +309,7 @@ module connector_bar_y_at(length = 1, x = 0, y = 0) {
 // Create a connector bar of a given length , oriented along the x-axis
 module connector_bar(l = 1) {
     
-    translate([length(l) / 2 + (bar_width / 2 - bar_overlap), 0, connector_height / 2])
+    translate([length(l) / 2 + bar_adjust, 0, connector_height / 2])
         union() {
                 
             // The middle part of the connector. Only create, if it should be wider than 0

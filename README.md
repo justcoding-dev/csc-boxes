@@ -4,15 +4,24 @@ An OpenSCAD generator for customizable, stackable and connectable boxes for 3D-p
 
 ## Overview
 
-The script can generate boxes and connectors. The connectors are placed at the borders of 
-each box and hold boxes together.
+The script can generate boxes and connectors. The connectors are placed below and 
+at the borders of each box and hold boxes together.
 
 Every box is made up from a grid of square base units. Every base unit has one cutout in 
 the bottom for a connector on the outside of the box. The size of each box is given as 
 number of base units along the x and y axis.
 
-Boxes can have an inset bottom. When matching the inset to the wall thickness, the boxes
-become stackable. See the comments in the script parameters for more details.
+Too complicated? Here's an example:
+    
+    base unit size: 40mm
+    width of the box: 3 (120mm)
+    depth of the box: 2 (80mm)
+     
+    The box will have 3 connector cutouts on the long side and two on the short one
+
+Boxes can have an inset bottom which overlaps the connector bar. When matching the 
+inset to the wall thickness, the boxes become stackable. See the comments in the 
+script parameters for more details.
 
 ## Getting started
 

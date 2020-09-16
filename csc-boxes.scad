@@ -9,6 +9,7 @@
 // v6.4 - documentation
 // v6.5 - code cleanup, moved modules
 // v6.6 - grooved bottom for stackability
+// v6.7 - added edge taper
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit in the box will 

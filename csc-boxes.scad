@@ -59,12 +59,12 @@ module run() {
     // Create a connector bar in x or y direction with a given length (in base units).
     // The bar will begin at 0/0 and extend in positive direction and is then
     // moved by dx and dy base unit sizes along the x and y axis.
-    // connector_bar_x_at(length, dx, dy);
-    // connector_bar_x_at(2, 1, 2);
+    // bar_x_at(length, dx, dy);
+    // bar_x_at(2, 1, 2);
 
     // Create two boxes and a connector bar and place them spaced for direct printing
     // box_at(2,1,30,0,0);
-    // connector_bar_x_at(2, 0, 2);
+    // bar_x_at(2, 0, 2);
     // box_at(2,2,30,0,3);
 }
 
@@ -292,7 +292,7 @@ module box(width = 1, depth = 1, height = 20) {
 }
 
 // Create a connector bar in x-direction and move it to the given x and y position
-module connector_bar_x_at(length = 1, x = 0, y = 0) {
+module bar_x_at(length = 1, x = 0, y = 0) {
     
 
     translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
@@ -300,7 +300,7 @@ module connector_bar_x_at(length = 1, x = 0, y = 0) {
 }
 
 // Create a connector bar in y-direction and move it to the given x and y position
-module connector_bar_y_at(length = 1, x = 0, y = 0) {
+module bar_y_at(length = 1, x = 0, y = 0) {
 
 
     translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
@@ -397,7 +397,7 @@ module create_fitting_test() {
         }
 
     // Put a connector between the boxes
-    connector_bar_y_at(1, 1.5, 0);
+    bar_y_at(1, 1.5, 0);
 }
 
 // A mask to hide half of a 1x1 box for the fitting test
@@ -430,41 +430,41 @@ module create_box_with_bar(width = 1, depth = 1, height = 10) {
 module create_demo_box_set_9x9() {
     
     // top right
-    connector_bar_y_at(2, 0, 0);
+    bar_y_at(2, 0, 0);
     box(2,2,30);
-    connector_bar_y_at(3, 2, 0);
+    bar_y_at(3, 2, 0);
     box_at(3,1,30,-1,2);
     box_at(1,3,30,2,0);
-    connector_bar_x_at(2,0,2);
+    bar_x_at(2,0,2);
 
     // top left
-    connector_bar_x_at(4, -1, 0);
+    bar_x_at(4, -1, 0);
     box_at(1,1,30,-1,0);
     box_at(1,1,30,-1,1);
-    connector_bar_x_at(1, -1, 1);
-    connector_bar_y_at(5, -1, -3);
+    bar_x_at(1, -1, 1);
+    bar_y_at(5, -1, -3);
     box_at(2,3,30, -3, -1);
-    connector_bar_x_at(3, -3, 2);
+    bar_x_at(3, -3, 2);
     box_at(2,1,30, -3, 2);
-    connector_bar_y_at(1, -1, 2);
+    bar_y_at(1, -1, 2);
 
     
     // bottom left
-    connector_bar_y_at(1, 0, -1);
+    bar_y_at(1, 0, -1);
     box_at(1,1,30,-1,-1);
     box_at(2,2,30, -1, -3);
     box_at(2,2,30, -3, -3);
-    connector_bar_x_at(2, -3, -1);
+    bar_x_at(2, -3, -1);
 
     // bottom right
     box_at(2,1,30,1,-3);
     box_at(2,1,30,0,-1);
     box_at(1,1,30,1,-2);
     box_at(1,2,30,2,-2);
-    connector_bar_x_at(3, -1, -1);
-    connector_bar_x_at(2, 1, -2);
-    connector_bar_y_at(2, 2, -2);
-    connector_bar_y_at(2, 1, -3);
+    bar_x_at(3, -1, -1);
+    bar_x_at(2, 1, -2);
+    bar_y_at(2, 2, -2);
+    bar_y_at(2, 1, -3);
 }
 
 // Higher definition curves for the cube

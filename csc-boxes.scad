@@ -11,6 +11,7 @@
 // v6.6 - grooved bottom for stackability
 // v6.7 - added edge taper
 // v6.7.1 - fixed partial overlap
+// v6.8 - added label pocket
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit in the box will 
@@ -40,7 +41,7 @@ module run() {
     // Create a set of containers and connector bars over a 9x9 area to
     // judge how they fit together.
     // Use 'simplify = true' to increase responsiveness of the viewer.
-    create_demo_box_set_9x9();
+    // create_demo_box_set_9x9();
 
     // Create a small smaple of connector and cutout to see how well they fit together
     // Useful for testing out new sizes and tolerances
@@ -49,8 +50,8 @@ module run() {
     // Create a single container with width, depth, height and wall thickness parameters
     // The box is placed at 0/0 and extends in positive directions.
     // box(width, depth, height);
-    // box(2,2,60);
-
+    box(2,2,30);
+    
     // Create a box and move it by dx base units to the right (use negative values
     // to move to the left) and by dy base unit sizes along the y-axis.
     // box_at(width, depth, height, dx, dy);
@@ -125,6 +126,27 @@ connector_radius = unit_size / 3.5;
 // Size difference between radii of the connector and the cutouts in mm
 connector_margin = 0.3;
 
+
+// Label pockets
+
+label_max_width = 60;
+
+
+// Thickness of the front wall of the label box
+label_front = 0.5;
+
+// Depth needed for the label
+label_space = 1.5;
+
+// Height of the bottom front part 
+label_front_bottom = 2;
+
+// Widht of the left and right front parts
+label_front_side = 3;
+
+// Height of the label pocket
+label_height = 14;
+
 ////////////////////////////////////////////////////////////////////////////////////
 // Stop editing here. 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -152,6 +174,9 @@ outer_radius = connector_radius + connector_margin / 2;
 
 // Radius of the connector
 inner_radius = connector_radius - connector_margin / 2;
+
+// Total depth of the label
+label_depth = label_front + label_space;
 
 // Position of the i-th connector 
 function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * div_adjust;
@@ -281,6 +306,9 @@ module box(width = 1, depth = 1, height = 20) {
                             angled_edge();
                             
             }
+            
+           translate([0, length(depth) / 2 - wall_thickness, height - label_height - bottom_floor_height - connector_margin]) 
+            label_pocket(min(min(label_max_width, length(width)), length(width)));
         }
         
         // Cut off the corners of the box
@@ -377,6 +405,49 @@ module connectorY(height = 1, radius = 1, mirrored = false) {
 }
 
 
+// create a pocket for the rear wall. IT is aligned with the rear on
+// the xz-plane, extending in -y. 
+module label_pocket(width = 40) {
+
+    
+    // The bottom with a sloped overhang.
+    translate ([0, -label_depth / 2, -label_depth / 2]) {
+        scale([width, label_depth, label_depth])
+            rotate([90,0,270]) 
+                translate ([0,0,-0.5]) 
+                    linear_extrude(height=1)
+                        polygon(points=[[-0.5,-0.5],[0.5,0.5],[-0.5,0.5]]);
+
+    side_width = label_front_side + wall_thickness;
+        
+    // Bottom front
+    translate([0, - (label_depth - label_front) / 2, (label_depth + label_front_bottom) / 2])    
+        scale([width, label_front, label_front_bottom]) 
+        cube(1,true);
+
+    // left front
+    translate([-(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
+        scale([side_width, label_front, label_height]) 
+            cube(1,true);
+
+    // right front
+    translate([(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
+        scale([side_width, label_front, label_height]) 
+            cube(1,true);
+
+    // left back
+    translate([-(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
+        scale([wall_thickness, label_depth, label_height]) 
+            cube(1,true);
+
+    // right back
+    translate([(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
+        scale([wall_thickness, label_depth, label_height]) 
+            cube(1,true);
+
+
+    }
+}
 
 // Create two half 1x1 boxes without walls and a connector for quickly
 // printing a test sample to judge the fitting of the connectors to
@@ -537,3 +608,5 @@ module angled_edge() {
             linear_extrude(height=1)
                 polygon(points=[[0,0],[1,0],[0,1]]);
 }
+
+ 

@@ -341,7 +341,7 @@ module box(width = 1, depth = 1, height = 20) {
         
         // Cut off the corners of the box
         if (!simplify) {
-            roundedcube([length(width), length(depth), 2 * height], true, 2, "z");
+            roundedcube([length(width), length(depth), 2 * height], true, wall_thickness, "z");
         }
         
     }   
@@ -478,8 +478,8 @@ module label_pocket(width = 40) {
             
             // Round of the sides 
             if (!simplify) {
-                translate([0, label_depth, label_height / 2 + label_depth / 2])
-                    roundedcube([width, label_depth, label_height + 2 * label_height], true, 2, "z");
+                translate([0, label_depth * 1.5, label_height / 2 + label_depth / 2])
+                    roundedcube([width, label_depth, label_height + 2 * label_height], true, wall_thickness, "z");
             }
         }
     }

@@ -127,25 +127,27 @@ connector_radius = unit_size / 3.5;
 connector_margin = 0.3;
 
 
+////////////////////////////////////////////////////////////////////////////////////
 // Label pockets
 
+// Maximum width of the label pocket
 label_max_width = 60;
 
 
 // Thickness of the front wall of the label box
-label_front = 0.5;
+label_front = 0.6;
 
 // Depth needed for the label
-label_space = 1.5;
+label_space = 1.0;
 
 // Height of the bottom front part 
 label_front_bottom = 2;
 
-// Widht of the left and right front parts
+// Widht of the overlapping left and right front parts
 label_front_side = 3;
 
 // Height of the label pocket
-label_height = 14;
+label_height = 10;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Stop editing here. 
@@ -404,50 +406,59 @@ module connectorY(height = 1, radius = 1, mirrored = false) {
 
 }
 
-
 // create a pocket for the rear wall. IT is aligned with the rear on
 // the xz-plane, extending in -y. 
 module label_pocket(width = 40) {
 
-    
-    // The bottom with a sloped overhang.
     translate ([0, -label_depth / 2, -label_depth / 2]) {
-        scale([width, label_depth, label_depth])
-            rotate([90,0,270]) 
-                translate ([0,0,-0.5]) 
-                    linear_extrude(height=1)
-                        polygon(points=[[-0.5,-0.5],[0.5,0.5],[-0.5,0.5]]);
+        intersection() {
+            union() {
 
-    side_width = label_front_side + wall_thickness;
-        
-    // Bottom front
-    translate([0, - (label_depth - label_front) / 2, (label_depth + label_front_bottom) / 2])    
-        scale([width, label_front, label_front_bottom]) 
-        cube(1,true);
+                // The bottom with a sloped overhang.
+                scale([width, label_depth, label_depth])
+                    rotate([90,0,270]) 
+                        translate ([0,0,-0.5]) 
+                            linear_extrude(height=1)
+                                polygon(points=[[-0.5,-0.5],[0.5,0.5],[-0.5,0.5]]);
 
-    // left front
-    translate([-(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
-        scale([side_width, label_front, label_height]) 
-            cube(1,true);
+                side_width = label_front_side + wall_thickness;
+                
+                // Bottom front
+                translate([0, - (label_depth - label_front) / 2, (label_depth + label_front_bottom) / 2])    
+                    scale([width, label_front, label_front_bottom]) 
+                    cube(1,true);
 
-    // right front
-    translate([(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
-        scale([side_width, label_front, label_height]) 
-            cube(1,true);
+                // left front
+                translate([-(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
+                    scale([side_width, label_front, label_height]) 
+                        cube(1,true);
 
-    // left back
-    translate([-(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
-        scale([wall_thickness, label_depth, label_height]) 
-            cube(1,true);
+                // right front
+                translate([(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
+                    scale([side_width, label_front, label_height]) 
+                        cube(1,true);
 
-    // right back
-    translate([(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
-        scale([wall_thickness, label_depth, label_height]) 
-            cube(1,true);
+                // left back
+                translate([-(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
+                    scale([wall_thickness, label_depth, label_height]) 
+                        cube(1,true);
 
+                // right back
+                translate([(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
+                    scale([wall_thickness, label_depth, label_height]) 
+                        cube(1,true);
 
+            }
+            
+            // Round of the sides 
+            if (!simplify) {
+                translate([0, label_depth, label_height / 2 + label_depth / 2])
+                    roundedcube([width, label_depth, label_height + 2 * label_height], true, 2, "z");
+            }
+        }
     }
 }
+
 
 // Create two half 1x1 boxes without walls and a connector for quickly
 // printing a test sample to judge the fitting of the connectors to

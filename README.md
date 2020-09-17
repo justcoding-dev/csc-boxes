@@ -23,6 +23,13 @@ Boxes can have an inset bottom which overlaps the connector bar. When matching t
 inset to the wall thickness, the boxes become stackable. See the comments in the 
 script parameters for more details.
 
+Boxes can have a pocket for inserting labels. Deactivate the label pocket by setting
+    
+    label_max_width = 0;
+
+The pocket is always placed on the wall parallel to and farthest away from the x axis. 
+If you want it on another wall, just switch the x and y dimensions of the box.
+
 ## Getting started
 
 Download the script, open in OpenSCAD, 
@@ -56,3 +63,16 @@ The boxes have grooves at the bottom, along the outlines of each square base uni
 the width of the bar_overlap parameter. If the bar overlap is slightly larger then the wall_thickness,
 it will be possible to stack the boxes. Because of the grooves, even larger boxes can be stacked
 on top of multiple smaller ones.
+
+Example: 
+    
+    wall_thickness = 2
+    bar_overlap = 2.2
+    bar_width = 4.4
+
+## Label pockets
+
+Label pocket sizes are configured via parameters in the script. See the comments for more information.
+
+The max_label_width parameter controls how wide the label will be. If the box width exceeds the *label_max_width*
+value, the label will *label_max_width* wide and centered. If the box is smaller, the label will take up the complete space. 

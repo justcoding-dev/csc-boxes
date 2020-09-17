@@ -50,7 +50,7 @@ module run() {
     // Create a single container with width, depth, height and wall thickness parameters
     // The box is placed at 0/0 and extends in positive directions.
     // box(width, depth, height);
-    box(2,2,30);
+    box(1,2,30);
     
     // Create a box and move it by dx base units to the right (use negative values
     // to move to the left) and by dy base unit sizes along the y-axis.
@@ -73,6 +73,9 @@ module run() {
 // Size of one unit, which has one connector
 unit_size = 40;
 
+////////////////////////////////////////////////////////////////////////////////////
+// Box floor
+//
 // The floor is made up of three parts. The upper_floor is the visible floor 
 // at the bottom of the box.The bottom_floor below that has cutout where the
 // connectors fit in. The heigt of the bottom floor part is equal to the height
@@ -95,6 +98,9 @@ wall_thickness = 2.0;
 // Possible values: 0 <= wall_edge_taper <= half of box width 
 wall_edge_taper = 1.5;
 
+////////////////////////////////////////////////////////////////////////////////////
+// Connector bars
+//
 // The connectors are triangular shapes that connect the cutouts of two adjacent
 // boxes. They can be attached to a connector bar (or divider). The connector 
 // bar can sit between the boxes or partially or completely underneath the boxes.
@@ -129,8 +135,14 @@ connector_margin = 0.3;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Label pockets
+//
+// Boxes can have a pocket for inserting labels. Deactivate the label pocket by setting
+// label_max_width = 0;
+// The pocket is always placed on the wall parallel to and farthest away from the x axis. 
+// If you want it on another wall, just switch the x and y dimensions of the box.
+// The vertical position is calculated so that there is room for another box to stack on top.
 
-// Maximum width of the label pocket
+// Maximum width of the inside of the label pocket
 label_max_width = 60;
 
 
@@ -140,7 +152,7 @@ label_front = 0.6;
 // Depth needed for the label
 label_space = 1.0;
 
-// Height of the bottom front part 
+// Height of the overlapping bottom front part 
 label_front_bottom = 2;
 
 // Widht of the overlapping left and right front parts
@@ -148,6 +160,14 @@ label_front_side = 3;
 
 // Height of the label pocket
 label_height = 10;
+
+// The left and right bars of the label pocket that connect the front plate to 
+// the box can be merged into the box walls if the box becomes smaller than 
+// the label_max_width.
+// Possible values:
+// true: merge sides into walls
+// false: always keep the bars inside the box
+label_hide_side_bars = true;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Stop editing here. 
@@ -179,6 +199,9 @@ inner_radius = connector_radius - connector_margin / 2;
 
 // Total depth of the label
 label_depth = label_front + label_space;
+
+// Include the left and right bars in the total label width
+label_width = label_max_width + 2 * wall_thickness;
 
 // Position of the i-th connector 
 function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * div_adjust;
@@ -309,8 +332,11 @@ module box(width = 1, depth = 1, height = 20) {
                             
             }
             
-           translate([0, length(depth) / 2 - wall_thickness, height - label_height - bottom_floor_height - connector_margin]) 
-            label_pocket(min(min(label_max_width, length(width)), length(width)));
+            // Add a label pocket on the rear wall
+            if (label_max_width > 0) {
+                translate([0, length(depth) / 2 - wall_thickness, height - label_height - bottom_floor_height - connector_margin]) 
+                    label_pocket(min(min(label_width, label_hide_side_bars ?  length(width) : length(width) - 2 * wall_thickness), length(width)));
+            }
         }
         
         // Cut off the corners of the box

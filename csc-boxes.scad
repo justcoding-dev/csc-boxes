@@ -89,7 +89,7 @@ connector_height = 1.6;
 floor_distance = 0.4;
 
 // The thickness of the box walls
-wall_thickness = 2.3;
+wall_thickness = 2.0;
 
 // Add a 45-degree slope to the bottom of each inside wall. 
 // Possible values: 0 <= wall_edge_taper <= half of box width 
@@ -102,7 +102,7 @@ wall_edge_taper = 1.5;
 // Width of the divider bar with the connectors. Set to zero to create only individual
 // connector pieces.
 // Possible value: bar_width >= 0
-bar_width = 5;
+bar_width = 4.4;
 
 // How much the divider goes under the boxes. If this is greater than 0, the box
 // must be printed with supports.
@@ -110,7 +110,7 @@ bar_width = 5;
 // Set your box wall_thickness to slightly less than the bar_overlap to make the
 // boxes stackable.
 // Possible values: 0 <= bar_overlap <= bar_width
-bar_overlap = 2.5;
+bar_overlap = 2.2;
 
 // How much the connectors should overlap
 // When zero, the connectors will touch their edges in the middle of the

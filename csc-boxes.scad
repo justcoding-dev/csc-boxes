@@ -41,7 +41,7 @@ module run() {
     // Create a set of containers and connector bars over a 9x9 area to
     // judge how they fit together.
     // Use 'simplify = true' to increase responsiveness of the viewer.
-    // create_demo_box_set_9x9();
+    create_demo_box_set_9x9();
 
     // Create a small smaple of connector and cutout to see how well they fit together
     // Useful for testing out new sizes and tolerances
@@ -50,7 +50,7 @@ module run() {
     // Create a single container with width, depth, height and wall thickness parameters
     // The box is placed at 0/0 and extends in positive directions.
     // box(width, depth, height);
-    box(1,2,30);
+    // box(1,2,30);
     
     // Create a box and move it by dx base units to the right (use negative values
     // to move to the left) and by dy base unit sizes along the y-axis.
@@ -132,7 +132,6 @@ connector_radius = unit_size / 3.5;
 // Size difference between radii of the connector and the cutouts in mm
 connector_margin = 0.3;
 
-
 ////////////////////////////////////////////////////////////////////////////////////
 // Label pockets
 //
@@ -176,35 +175,35 @@ label_hide_side_bars = true;
 // Calculate some helper variables
 
 // Calculate total floor thickness from the individual layers
-total_floor_height = top_floor_height + connector_height + floor_distance;
+_floor_height = top_floor_height + connector_height + floor_distance;
 
 // The height of the bottom part of the floor, this will encase the connectors 
-bottom_floor_height = connector_height + floor_distance;
+_bottom_floor_height = connector_height + floor_distance;
 
 // Size adjustment to account for bar width and overlap (two 1x1 boxes with a connector
 // bar between them must take the same space as one 1x2 box)
-div_adjust = max(bar_width - 2 * bar_overlap, 0);
+_div_adjust = max(bar_width - 2 * bar_overlap, 0);
 
 // Adjust position for wide bars (wider than the overlap on both sides)
-bar_adjust = max(bar_width / 2 - bar_overlap, 0);
+_bar_adjust = max(bar_width / 2 - bar_overlap, 0);
 
 // Calculate total box length for a given number of base units
-function length(numUnits) = numUnits * unit_size + sign(numUnits) * (abs(numUnits) - 1) * div_adjust;
+function length(numUnits) = numUnits * unit_size + sign(numUnits) * (abs(numUnits) - 1) * _div_adjust;
 
 // Radius of the cutout in the box floor
-outer_radius = connector_radius + connector_margin / 2;
+_outer_radius = connector_radius + connector_margin / 2;
 
 // Radius of the connector
-inner_radius = connector_radius - connector_margin / 2;
+_inner_radius = connector_radius - connector_margin / 2;
 
 // Total depth of the label
-label_depth = label_front + label_space;
+_label_depth = label_front + label_space;
 
 // Include the left and right bars in the total label width
-label_width = label_max_width + 2 * wall_thickness;
+_label_width = label_max_width + 2 * wall_thickness;
 
 // Position of the i-th connector 
-function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * div_adjust;
+function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 0.5) * _div_adjust;
 
 // Calculate how far a connector bar must be moved when placing in wanted position
 function shift(num) = num != 0 ? length(num) : 0;
@@ -226,16 +225,16 @@ module box_at(width = 1, depth = 1, height = 1, x = 0, y = 0) {
 // The complete box with all parts, centered and starting at height 0
 module box(width = 1, depth = 1, height = 20) {
     
-    translate([length(width) / 2 + bar_adjust, length(depth) / 2 + bar_adjust, 0])
+    translate([length(width) / 2 + _bar_adjust, length(depth) / 2 + _bar_adjust, 0])
     intersection() {
         union() {
             // Bottom floor with connector cutouts
             difference() {
                 
                 // Bottom floor which will house the connectors
-                bottom_floor_height = bottom_floor_height + top_floor_height / 2;
+                _bottom_floor_height = _bottom_floor_height + top_floor_height / 2;
                 
-                translate ([0, 0, bottom_floor_height / 2])
+                translate ([0, 0, _bottom_floor_height / 2])
                 union() {
                     // Create individual bottom parts for each unit
                     
@@ -246,7 +245,7 @@ module box(width = 1, depth = 1, height = 20) {
                         for (j = [1:depth]) {
                             // Create one bottom piece and move it to it's unit position
                             translate ([x_offset + length(i), y_offset + length(j), 0])                     
-                                scale ([unit_size - bar_overlap * 2, unit_size - bar_overlap * 2, bottom_floor_height]) 
+                                scale ([unit_size - bar_overlap * 2, unit_size - bar_overlap * 2, _bottom_floor_height]) 
                                     cube(1, true);
                         }
                     }
@@ -255,51 +254,51 @@ module box(width = 1, depth = 1, height = 20) {
                 // Connector cutouts
                 union() {
                    
-                    conn_offset = bar_adjust + connector_overlap / 2 + outer_radius - inner_radius;
+                    conn_offset = _bar_adjust + connector_overlap / 2 + _outer_radius - _inner_radius;
                     
-                    c_height = 10 * total_floor_height;
+                    c_height = 10 * _floor_height;
                     
                     for ( i = [1:width] ) {
                         
-                       translate([conn_pos(i, width), length(depth) / 2 - outer_radius + conn_offset, 0]) 
-                        connectorX(c_height, outer_radius);
+                       translate([conn_pos(i, width), length(depth) / 2 - _outer_radius + conn_offset, 0]) 
+                        connectorX(c_height, _outer_radius);
                         
-                       translate([conn_pos(i, width), -(length(depth) / 2 - outer_radius + conn_offset), 0]) 
-                           connectorX(c_height, outer_radius, true);
+                       translate([conn_pos(i, width), -(length(depth) / 2 - _outer_radius + conn_offset), 0]) 
+                           connectorX(c_height, _outer_radius, true);
                     }
 
                     for ( i = [1:depth] ) {
-                       translate([length(width) / 2 - outer_radius + conn_offset, conn_pos(i, depth), 0]) 
-                           connectorY(c_height, outer_radius, false);
+                       translate([length(width) / 2 - _outer_radius + conn_offset, conn_pos(i, depth), 0]) 
+                           connectorY(c_height, _outer_radius, false);
                         
-                       translate([-(length(width) / 2 - outer_radius + conn_offset), conn_pos(i, depth), 0]) 
-                           connectorY(c_height, outer_radius, true);
+                       translate([-(length(width) / 2 - _outer_radius + conn_offset), conn_pos(i, depth), 0]) 
+                           connectorY(c_height, _outer_radius, true);
                     }
                 }
             }
 
 
             // Upper floor
-            translate ([0, 0, top_floor_height / 2 + bottom_floor_height + floor_distance]) 
+            translate ([0, 0, top_floor_height / 2 + _bottom_floor_height + floor_distance]) 
                 scale ([length(width), length(depth), top_floor_height]) 
                     cube(1, true);
             
             // Walls
-            w_offset = (height - total_floor_height) / 2 + total_floor_height;
+            w_offset = (height - _floor_height) / 2 + _floor_height;
             translate ([0,  - length(depth) / 2 + wall_thickness / 2, w_offset]) 
-                scale ([length(width), wall_thickness, height - total_floor_height]) 
+                scale ([length(width), wall_thickness, height - _floor_height]) 
                 cube (1, true);
             
             translate ([0,  length(depth) / 2 - wall_thickness / 2, w_offset]) 
-                scale ([length(width), wall_thickness, height - total_floor_height]) 
+                scale ([length(width), wall_thickness, height - _floor_height]) 
                     cube (1, true);
 
             translate ([ - length(width) / 2 + wall_thickness / 2, 0, w_offset]) 
-                scale ([wall_thickness, length(depth), height - total_floor_height]) 
+                scale ([wall_thickness, length(depth), height - _floor_height]) 
                     cube (1, true);
 
             translate ([ + length(width) / 2 - wall_thickness / 2, 0, w_offset]) 
-                scale ([wall_thickness, length(depth), height - total_floor_height]) 
+                scale ([wall_thickness, length(depth), height - _floor_height]) 
                     cube (1, true);
 
             // put a triangular edge at the bottom of each wall
@@ -308,24 +307,24 @@ module box(width = 1, depth = 1, height = 20) {
                 edge_taper = wall_edge_taper + wall_thickness;
                 
                 // left:
-                translate([- length(width) / 2, 0, total_floor_height])
+                translate([- length(width) / 2, 0, _floor_height])
                     scale([edge_taper, length(depth), edge_taper])
                         angled_edge();
                     
                 // right:
-                translate([length(width) / 2, 0, total_floor_height])
+                translate([length(width) / 2, 0, _floor_height])
                     scale([edge_taper, length(depth), edge_taper])
                         rotate([0,0,180])
                         angled_edge();
 
                 // top:
-                translate([0, - length(depth) / 2, total_floor_height])
+                translate([0, - length(depth) / 2, _floor_height])
                     scale([length(width), edge_taper, edge_taper])
                         rotate([0,0,90])
                             angled_edge();
                     
                 // bottom:
-                translate([0, length(depth) / 2, total_floor_height])
+                translate([0, length(depth) / 2, _floor_height])
                     scale([length(width), edge_taper, edge_taper])
                         rotate([0,0,270])
                             angled_edge();
@@ -334,8 +333,8 @@ module box(width = 1, depth = 1, height = 20) {
             
             // Add a label pocket on the rear wall
             if (label_max_width > 0) {
-                translate([0, length(depth) / 2 - wall_thickness, height - label_height - bottom_floor_height - connector_margin]) 
-                    label_pocket(min(min(label_width, label_hide_side_bars ?  length(width) : length(width) - 2 * wall_thickness), length(width)));
+                translate([0, length(depth) / 2 - wall_thickness, height - label_height - _bottom_floor_height - connector_margin]) 
+                    label_pocket(min(min(_label_width, label_hide_side_bars ?  length(width) : length(width) - 2 * wall_thickness), length(width)));
             }
         }
         
@@ -367,7 +366,7 @@ module bar_y_at(length = 1, x = 0, y = 0) {
 // Create a connector bar of a given length , oriented along the x-axis
 module connector_bar(l = 1) {
     
-    translate([length(l) / 2 + bar_adjust, 0, connector_height / 2])
+    translate([length(l) / 2 + _bar_adjust, 0, connector_height / 2])
         union() {
                 
             // The middle part of the connector. Only create, if it should be wider than 0
@@ -389,11 +388,11 @@ module connector_bar(l = 1) {
             // Attach connectors to both sides of the middle part
             for (i = [1:l] ) {
                 
-               translate([conn_pos(i, l), -inner_radius + connector_overlap / 2, 0]) 
-                    connectorX(connector_height, inner_radius);
+               translate([conn_pos(i, l), -_inner_radius + connector_overlap / 2, 0]) 
+                    connectorX(connector_height, _inner_radius);
                 
-               translate([conn_pos(i, l), inner_radius - connector_overlap / 2, 0]) 
-                    connectorX(connector_height, inner_radius, true);
+               translate([conn_pos(i, l), _inner_radius - connector_overlap / 2, 0]) 
+                    connectorX(connector_height, _inner_radius, true);
             }
         }
 }
@@ -436,12 +435,12 @@ module connectorY(height = 1, radius = 1, mirrored = false) {
 // the xz-plane, extending in -y. 
 module label_pocket(width = 40) {
 
-    translate ([0, -label_depth / 2, -label_depth / 2]) {
+    translate ([0, -_label_depth / 2, -_label_depth / 2]) {
         intersection() {
             union() {
 
                 // The bottom with a sloped overhang.
-                scale([width, label_depth, label_depth])
+                scale([width, _label_depth, _label_depth])
                     rotate([90,0,270]) 
                         translate ([0,0,-0.5]) 
                             linear_extrude(height=1)
@@ -450,36 +449,36 @@ module label_pocket(width = 40) {
                 side_width = label_front_side + wall_thickness;
                 
                 // Bottom front
-                translate([0, - (label_depth - label_front) / 2, (label_depth + label_front_bottom) / 2])    
+                translate([0, - (_label_depth - label_front) / 2, (_label_depth + label_front_bottom) / 2])    
                     scale([width, label_front, label_front_bottom]) 
                     cube(1,true);
 
                 // left front
-                translate([-(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
+                translate([-(width - side_width) / 2, - (_label_depth - label_front) / 2, (_label_depth + label_height) / 2])    
                     scale([side_width, label_front, label_height]) 
                         cube(1,true);
 
                 // right front
-                translate([(width - side_width) / 2, - (label_depth - label_front) / 2, (label_depth + label_height) / 2])    
+                translate([(width - side_width) / 2, - (_label_depth - label_front) / 2, (_label_depth + label_height) / 2])    
                     scale([side_width, label_front, label_height]) 
                         cube(1,true);
 
                 // left back
-                translate([-(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
-                    scale([wall_thickness, label_depth, label_height]) 
+                translate([-(width - wall_thickness) / 2, 0, (_label_depth + label_height) / 2])    
+                    scale([wall_thickness, _label_depth, label_height]) 
                         cube(1,true);
 
                 // right back
-                translate([(width - wall_thickness) / 2, 0, (label_depth + label_height) / 2])    
-                    scale([wall_thickness, label_depth, label_height]) 
+                translate([(width - wall_thickness) / 2, 0, (_label_depth + label_height) / 2])    
+                    scale([wall_thickness, _label_depth, label_height]) 
                         cube(1,true);
 
             }
             
             // Round of the sides 
             if (!simplify) {
-                translate([0, label_depth * 1.5, label_height / 2 + label_depth / 2])
-                    roundedcube([width, label_depth, label_height + 2 * label_height], true, wall_thickness, "z");
+                translate([0, _label_depth * 1.5, label_height / 2 + _label_depth / 2])
+                    roundedcube([width, _label_depth, label_height + 2 * label_height], true, wall_thickness, "z");
             }
         }
     }
@@ -493,14 +492,14 @@ module create_fitting_test() {
     
     // Setup one box in the origin location, mask out one half
     intersection() {
-        box(1, 1, total_floor_height);
+        box(1, 1, _floor_height);
         box_mask_connector();
     }
     
     // Setup a second box further down the x axis, mask out half of it
     translate ([shift(1.5) + bar_offset(1.5), shift(0) + bar_offset(0), 0]) 
         intersection() {
-            box(1, 1, total_floor_height);
+            box(1, 1, _floor_height);
             box_mask_connector();
         }
 
@@ -512,8 +511,8 @@ module create_fitting_test() {
 module box_mask_connector() {
     
     translate([length(1) / 2, length(1) / 4, 0])
-        translate([length(1) / 4 + bar_adjust, length(1) / 4 + bar_adjust, total_floor_height / 2])
-            scale([length(1) / 2, length(1), total_floor_height]) 
+        translate([length(1) / 4 + _bar_adjust, length(1) / 4 + _bar_adjust, _floor_height / 2])
+            scale([length(1) / 2, length(1), _floor_height]) 
                 cube(1, true);
 }
 

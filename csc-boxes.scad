@@ -12,6 +12,8 @@
 // v6.7 - added edge taper
 // v6.7.1 - fixed partial overlap
 // v6.8 - added label pocket
+// v7.0 - added auto-calculation of bar width and overlap and connector size
+//        CAUTION: Placement of connectors probably incompatible to earlier versions
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit in the box will 
@@ -74,6 +76,18 @@ module run() {
 unit_size = 40;
 
 ////////////////////////////////////////////////////////////////////////////////////
+// Box walls
+
+// The thickness of the box walls
+wall_thickness = 2.0;
+
+// Add a 45-degree slope to the bottom of each inside wall. 
+// This value controls the depth of the slope
+// Possible values: 0 <= wall_edge_taper <= half of box width 
+wall_edge_taper = 1.5;
+
+
+////////////////////////////////////////////////////////////////////////////////////
 // Box floor
 //
 // The floor is made up of three parts. The upper_floor is the visible floor 
@@ -91,13 +105,6 @@ connector_height = 1.6;
 // Space between connector and top floor
 floor_distance = 0.4;
 
-// The thickness of the box walls
-wall_thickness = 2.0;
-
-// Add a 45-degree slope to the bottom of each inside wall. 
-// Possible values: 0 <= wall_edge_taper <= half of box width 
-wall_edge_taper = 1.5;
-
 ////////////////////////////////////////////////////////////////////////////////////
 // Connector bars
 //
@@ -107,16 +114,20 @@ wall_edge_taper = 1.5;
 
 // Width of the divider bar with the connectors. Set to zero to create only individual
 // connector pieces.
-// Possible value: bar_width >= 0
-bar_width = 4.4;
+// Possible value: 
+// _bar_width >= 0, 
+// _bar_width = -1 to set automatically to 2 * bar_overlap
+bar_width = -1;
 
 // How much the divider goes under the boxes. If this is greater than 0, the box
 // must be printed with supports.
-// Set bar_overlap = bar_width / 2 to avoid ending up with spaces between the boxes.
-// Set your box wall_thickness to slightly less than the bar_overlap to make the
+// Set _bar_overlap = _bar_width / 2 to avoid ending up with spaces between the boxes.
+// Set your box wall_thickness to slightly less than the _bar_overlap to make the
 // boxes stackable.
-// Possible values: 0 <= bar_overlap <= bar_width
-bar_overlap = 2.2;
+// Possible values: 
+// 0 <= _bar_overlap <= _bar_width
+// bar_overlap = -1 to set automatically to wall_thickness + 1/2 * connector_margin
+bar_overlap = -1;
 
 // How much the connectors should overlap
 // When zero, the connectors will touch their edges in the middle of the
@@ -124,10 +135,11 @@ bar_overlap = 2.2;
 // each other, so they overlap in the connector bar
 connector_overlap = 12;
 
-// You might want to adjust this value (the connector size) when changing the connector 
-// overlap above. The cutouts for the connectors must not touch each other.
-// For an overlap of 15 a divisor of 3.5 here works well.
-connector_radius = unit_size / 3.5;
+// Set the size of the connectors here, represented as a circle radius.
+// The cutouts for the connectors must not touch each other.
+// For an overlap of 12-15 a divisor of 3.5 here works well.
+// Set the value to -1 to enable auto calculation
+connector_radius = -1;
 
 // Size difference between radii of the connector and the cutouts in mm
 connector_margin = 0.3;
@@ -143,7 +155,6 @@ connector_margin = 0.3;
 
 // Maximum width of the inside of the label pocket
 label_max_width = 60;
-
 
 // Thickness of the front wall of the label box
 label_front = 0.6;
@@ -174,6 +185,24 @@ label_hide_side_bars = true;
 
 // Calculate some helper variables
 
+_bar_overlap = (bar_overlap < 0 ? wall_thickness + connector_margin / 2 : bar_overlap);
+echo(bar_overlap=_bar_overlap);
+
+_bar_width = (bar_width < 0 ? 2 * _bar_overlap : bar_width);
+echo(bar_width=_bar_width);
+
+// Calculate maximum connector radius for the given other parameters
+// u = unit_size
+// w = bar_width
+// o = bar_overlap
+// v = connector_overlap
+function radius(u, w, o, v) = 0.5 * (sqrt(2) * sqrt(4 * o * o - 4 * o * u - 4 * o * v - 4 * o * w + u * u + 2 * u * v + 2 * u * w + v * v + 2 * v * w + w * w) + 2 * o - u - v - w);
+// solve {sqrt(2 * (us/2 + (bw / 2 - bo) + co/2 - r) ^ 2) == 2*r,r} 
+
+_connector_radius = (connector_radius > 0 ? connector_radius : radius(unit_size, _bar_width, _bar_overlap, connector_overlap)); 
+
+echo(radius=_connector_radius);
+
 // Calculate total floor thickness from the individual layers
 _floor_height = top_floor_height + connector_height + floor_distance;
 
@@ -182,19 +211,19 @@ _bottom_floor_height = connector_height + floor_distance;
 
 // Size adjustment to account for bar width and overlap (two 1x1 boxes with a connector
 // bar between them must take the same space as one 1x2 box)
-_div_adjust = max(bar_width - 2 * bar_overlap, 0);
+_div_adjust = max(_bar_width - 2 * _bar_overlap, 0);
 
 // Adjust position for wide bars (wider than the overlap on both sides)
-_bar_adjust = max(bar_width / 2 - bar_overlap, 0);
+_bar_adjust = max(_bar_width / 2 - _bar_overlap, 0);
 
 // Calculate total box length for a given number of base units
 function length(numUnits) = numUnits * unit_size + sign(numUnits) * (abs(numUnits) - 1) * _div_adjust;
 
 // Radius of the cutout in the box floor
-_outer_radius = connector_radius + connector_margin / 2;
+_outer_radius = _connector_radius + connector_margin / 2;
 
 // Radius of the connector
-_inner_radius = connector_radius - connector_margin / 2;
+_inner_radius = _connector_radius - connector_margin / 2;
 
 // Total depth of the label
 _label_depth = label_front + label_space;
@@ -209,7 +238,7 @@ function conn_pos(i, size) = (i - size / 2 - 0.5) * unit_size + (i - size / 2 - 
 function shift(num) = num != 0 ? length(num) : 0;
 
 // Calculate how far a connector bar must be shifted to match the box cutouts
-function bar_offset(num) = num != 0 ? sign(num) * max(bar_width / 2 - bar_overlap, 0) * 2 : 0;
+function bar_offset(num) = num != 0 ? sign(num) * max(_bar_width / 2 - _bar_overlap, 0) * 2 : 0;
 
 // Everything ist set. Run the module with the user commands.
 run();
@@ -245,7 +274,7 @@ module box(width = 1, depth = 1, height = 20) {
                         for (j = [1:depth]) {
                             // Create one bottom piece and move it to it's unit position
                             translate ([x_offset + length(i), y_offset + length(j), 0])                     
-                                scale ([unit_size - bar_overlap * 2, unit_size - bar_overlap * 2, _bottom_floor_height]) 
+                                scale ([unit_size - _bar_overlap * 2, unit_size - _bar_overlap * 2, _bottom_floor_height]) 
                                     cube(1, true);
                         }
                     }
@@ -254,24 +283,24 @@ module box(width = 1, depth = 1, height = 20) {
                 // Connector cutouts
                 union() {
                    
-                    conn_offset = _bar_adjust + connector_overlap / 2 + _outer_radius - _inner_radius;
+                    conn_offset = _bar_adjust + connector_overlap / 2 - _connector_radius;
                     
                     c_height = 10 * _floor_height;
                     
                     for ( i = [1:width] ) {
                         
-                       translate([conn_pos(i, width), length(depth) / 2 - _outer_radius + conn_offset, 0]) 
+                       translate([conn_pos(i, width), length(depth) / 2 + conn_offset, 0]) 
                         connectorX(c_height, _outer_radius);
                         
-                       translate([conn_pos(i, width), -(length(depth) / 2 - _outer_radius + conn_offset), 0]) 
+                       translate([conn_pos(i, width), -(length(depth) / 2 + conn_offset), 0]) 
                            connectorX(c_height, _outer_radius, true);
                     }
 
                     for ( i = [1:depth] ) {
-                       translate([length(width) / 2 - _outer_radius + conn_offset, conn_pos(i, depth), 0]) 
+                       translate([length(width) / 2 + conn_offset, conn_pos(i, depth), 0]) 
                            connectorY(c_height, _outer_radius, false);
                         
-                       translate([-(length(width) / 2 - _outer_radius + conn_offset), conn_pos(i, depth), 0]) 
+                       translate([-(length(width) / 2 + conn_offset), conn_pos(i, depth), 0]) 
                            connectorY(c_height, _outer_radius, true);
                     }
                 }
@@ -370,28 +399,28 @@ module connector_bar(l = 1) {
         union() {
                 
             // The middle part of the connector. Only create, if it should be wider than 0
-            if (bar_width > 0) {
+            if (_bar_width > 0) {
                 
                 // Pre-calc length of the divider
-                cyl_len = length(l) - bar_overlap * 2;
+                cyl_len = length(l) - _bar_overlap * 2;
                 
                 // Build the actual divider itself
-                scale ([cyl_len, bar_width - connector_margin, connector_height])  cube (1, true);
+                scale ([cyl_len, _bar_width - connector_margin, connector_height])  cube (1, true);
                 
                 // Add a triangular guide on top so the boxes can slide in place
-                // translate([0,0, bar_width * 0.3660254 ]) 
+                // translate([0,0, _bar_width * 0.3660254 ]) 
                 //    rotate ([60, 0, 0]) 
                 //        rotate ([0, 90, 0]) 
-                //            cylinder(c_height, bar_width / 2, bar_width / 2, true, $fn=3);
+                //            cylinder(c_height, _bar_width / 2, _bar_width / 2, true, $fn=3);
             }
             
             // Attach connectors to both sides of the middle part
             for (i = [1:l] ) {
                 
-               translate([conn_pos(i, l), -_inner_radius + connector_overlap / 2, 0]) 
+               translate([conn_pos(i, l), - _connector_radius + connector_overlap / 2, 0]) 
                     connectorX(connector_height, _inner_radius);
                 
-               translate([conn_pos(i, l), _inner_radius - connector_overlap / 2, 0]) 
+               translate([conn_pos(i, l), _connector_radius - connector_overlap / 2, 0]) 
                     connectorX(connector_height, _inner_radius, true);
             }
         }
@@ -523,8 +552,8 @@ module create_box_with_bar(width = 1, depth = 1, height = 10) {
 
     // Where to place the connector: 
     // make box and connector: fit connectors into cutouts on +y side:
-    // (lengthY + bar_width) / 2 - bar_overlap
-    y_offset = (lengthY + bar_width) / 2 - bar_overlap; 
+    // (lengthY + _bar_width) / 2 - _bar_overlap
+    y_offset = (lengthY + _bar_width) / 2 - _bar_overlap; 
 
     translate ([0, y_offset, 0]) 
         connector_bar();

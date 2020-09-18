@@ -14,6 +14,7 @@
 // v6.8 - added label pocket
 // v7.0 - added auto-calculation of bar width and overlap and connector size
 //        CAUTION: Placement of connectors probably incompatible to earlier versions
+// v7.1 - reorganized parameters for Customizer
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit in the box will 
@@ -35,45 +36,18 @@
 // Set to true for debugging (disables corner rounding for faster ren):
 simplify = true;
 
-// This will be run once all variables have been initialized. Put your 
-// wanted things here or uncomment one of the predefined functions (they
-// are defined further down in the script).
-module run() {
-
-    // Create a set of containers and connector bars over a 9x9 area to
-    // judge how they fit together.
-    // Use 'simplify = true' to increase responsiveness of the viewer.
-    create_demo_box_set_9x9();
-
-    // Create a small smaple of connector and cutout to see how well they fit together
-    // Useful for testing out new sizes and tolerances
-    // create_fitting_test();
-
-    // Create a single container with width, depth, height and wall thickness parameters
-    // The box is placed at 0/0 and extends in positive directions.
-    // box(width, depth, height);
-    // box(1,2,30);
-    
-    // Create a box and move it by dx base units to the right (use negative values
-    // to move to the left) and by dy base unit sizes along the y-axis.
-    // box_at(width, depth, height, dx, dy);
-    // box_at(2,2,40,3,2);
-
-    // Create a connector bar in x or y direction with a given length (in base units).
-    // The bar will begin at 0/0 and extend in positive direction and is then
-    // moved by dx and dy base unit sizes along the x and y axis.
-    // bar_x_at(length, dx, dy);
-    // bar_x_at(2, 1, 2);
-
-    // Create two boxes and a connector bar and place them spaced for direct printing
-    // box_at(2,1,30,0,0);
-    // bar_x_at(2, 0, 2);
-    // box_at(2,2,30,0,3);
-}
-
 
 // Size of one unit, which has one connector
-unit_size = 40;
+unit_size = 40; // [10:1:200]
+
+// Width of the box
+demo_box_width = 3;
+
+// Depth of the box:
+demo_box_depth = 2;
+
+// Height of the box:
+demo_box_height = 40;
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Box walls
@@ -169,7 +143,7 @@ label_front_bottom = 2;
 label_front_side = 3;
 
 // Height of the label pocket
-label_height = 10;
+label_height = 14;
 
 // The left and right bars of the label pocket that connect the front plate to 
 // the box can be merged into the box walls if the box becomes smaller than 
@@ -178,6 +152,48 @@ label_height = 10;
 // true: merge sides into walls
 // false: always keep the bars inside the box
 label_hide_side_bars = true;
+
+
+// This will be run once all variables have been initialized. Put your 
+// wanted things here or uncomment one of the predefined functions (they
+// are defined further down in the script).
+module run() {
+
+    // Demo for Thingiverse customizer:
+    box_at(demo_box_width, demo_box_depth, demo_box_height, 0,0);
+    bar_y_at(demo_box_depth, demo_box_width + 1, 0);
+    bar_x_at(demo_box_width, 0, -1);
+    
+    // Create a set of containers and connector bars over a 9x9 area to
+    // judge how they fit together.
+    // Use 'simplify = true' to increase responsiveness of the viewer.
+    // create_demo_box_set_9x9();
+
+    // Create a small smaple of connector and cutout to see how well they fit together
+    // Useful for testing out new sizes and tolerances
+    // create_fitting_test();
+
+    // Create a single container with width, depth, height and wall thickness parameters
+    // The box is placed at 0/0 and extends in positive directions.
+    // box(width, depth, height);
+    // box(1,2,30);
+    
+    // Create a box and move it by dx base units to the right (use negative values
+    // to move to the left) and by dy base unit sizes along the y-axis.
+    // box_at(width, depth, height, dx, dy);
+    // box_at(2,2,40,3,2);
+
+    // Create a connector bar in x or y direction with a given length (in base units).
+    // The bar will begin at 0/0 and extend in positive direction and is then
+    // moved by dx and dy base unit sizes along the x and y axis.
+    // bar_x_at(length, dx, dy);
+    // bar_x_at(2, 1, 2);
+
+    // Create two boxes and a connector bar and place them spaced for direct printing
+    // box_at(2,1,30,0,0);
+    // bar_x_at(2, 0, 2);
+    // box_at(2,2,30,0,3);
+}
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Stop editing here. 

@@ -15,10 +15,11 @@
 // v7.0 - added auto-calculation of bar width and overlap and connector size
 //        CAUTION: Placement of connectors probably incompatible to earlier versions
 // v7.1 - reorganized parameters for Customizer
+// v7.2 - added cutouts on inside and bar grids
 //
 // Each box is made up from a grid of x * y square units. Set the base unit size
 // and the number of units in X and Y direction next. Each unit in the box will 
-// have a cutout for a connector on the outside.
+// have cutouts for a connectors on the outside and along the insides.
 //
 ////////////////////////////////////////////////////////////////////////////////////
 
@@ -176,8 +177,9 @@ module run() {
     // Create a single container with width, depth, height and wall thickness parameters
     // The box is placed at 0/0 and extends in positive directions.
     // box(width, depth, height);
-    // box(1,2,30);
-    
+    // box(2,5,30);
+    // bar_x_at(1,0,0);
+    bar_grid(3,2,1,1,0,0);
     // Create a box and move it by dx base units to the right (use negative values
     // to move to the left) and by dy base unit sizes along the y-axis.
     // box_at(width, depth, height, dx, dy);
@@ -302,23 +304,25 @@ module box(width = 1, depth = 1, height = 20) {
                     conn_offset = _bar_adjust + connector_overlap / 2 - _connector_radius;
                     
                     c_height = 10 * _floor_height;
-                    
-                    for ( i = [1:width] ) {
-                        
-                       translate([conn_pos(i, width), length(depth) / 2 + conn_offset, 0]) 
-                        connectorX(c_height, _outer_radius);
-                        
-                       translate([conn_pos(i, width), -(length(depth) / 2 + conn_offset), 0]) 
-                           connectorX(c_height, _outer_radius, true);
+                 
+                    for ( w = [1:width] ) {
+
+                        for ( d = [1:depth] ) {
+                            
+                            translate([conn_pos(w, width), length(depth) / 2 - length(d-1) + conn_offset, 0]) 
+                                connectorX(c_height, _outer_radius);
+
+                            translate([conn_pos(w, width), length(d-1) -(length(depth) / 2 + conn_offset), 0]) 
+                                connectorX(c_height, _outer_radius, true);
+                                
+                            translate([length(width) / 2 - length(w-1) + conn_offset, conn_pos(d, depth), 0]) 
+                                connectorY(c_height, _outer_radius, false);
+
+                            translate([length(w-1) -(length(width) / 2 + conn_offset), conn_pos(d, depth), 0]) 
+                                connectorY(c_height, _outer_radius, true);
+                        }
                     }
 
-                    for ( i = [1:depth] ) {
-                       translate([length(width) / 2 + conn_offset, conn_pos(i, depth), 0]) 
-                           connectorY(c_height, _outer_radius, false);
-                        
-                       translate([-(length(width) / 2 + conn_offset), conn_pos(i, depth), 0]) 
-                           connectorY(c_height, _outer_radius, true);
-                    }
                 }
             }
 
@@ -390,6 +394,25 @@ module box(width = 1, depth = 1, height = 20) {
         
     }   
 }
+
+
+// Create a grid of connector bars 
+// width, height - extent of the grid along the axes
+// inset - how many bars should be skipped on the outside (use 0,0,0,0 for a closed grid, 1,1,1,1 for an open one)
+module bar_grid(width = 1, depth = 1, insetLeft=0, insetRight=0, insetBottom=0, insetTop = 0) {
+
+    translate ([shift(x) + bar_offset(x), shift(y) + bar_offset(y), 0]) 
+    union() {
+        for ( w = [insetLeft:width - insetRight] ) {
+            bar_y_at(depth, w, 0);
+        } 
+        
+        for ( d = [insetBottom:depth - insetTop] ) {
+            bar_x_at(width, 0, d);
+        }
+    }
+}
+                    
 
 // Create a connector bar in x-direction and move it to the given x and y position
 module bar_x_at(length = 1, x = 0, y = 0) {
